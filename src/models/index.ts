@@ -156,7 +156,6 @@ interface IUser extends Document {
   username: string;
   password: string;
   role: UserRole;
-  email?: string;
   isActive?: boolean;
   propertyId?: Types.ObjectId;
 }
@@ -249,7 +248,7 @@ const guestSchema = new Schema<IGuest>({
   gdprConsent: { type: Boolean, default: false },
 }, { timestamps: true });
 
-guestSchema.index({ email: 1 });
+guestSchema.index({ loyaltyTier: 1 });
 
 const bookingSchema = new Schema<IBooking>({
   guest: { type: Schema.Types.ObjectId, ref: 'Guest', required: true },
@@ -279,7 +278,6 @@ invoiceSchema.index({ booking: 1 });
 const userSchema = new Schema<IUser>({
   username: { type: String, required: true, unique: true },
   password: { type: String, required: true },
-  email: { type: String, unique: true, trim: true },
   isActive: { type: Boolean, default: true },
   role: { type: String, enum: Object.values(UserRole), required: true },
   propertyId: { type: Schema.Types.ObjectId, ref: 'Property', default: null },

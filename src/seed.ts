@@ -1,9 +1,18 @@
 import mongoose from 'mongoose';
 import bcrypt from 'bcryptjs';
-import { Room, User, Property, Guest, Booking, OTAReservation, AuditLog, Notification } from './models/index';
+import { Room, User, Property, Guest, Booking, OTAReservation, AuditLog, Notification } from './models';
+import dotenv from 'dotenv';
+dotenv.config();
 
 async function seedDatabase(): Promise<void> {
   try {
+    // Check for MONGODB_URI
+    console.log('MONGODB_URI:', process.env.MONGODB_URI);
+    if (!process.env.MONGODB_URI) {
+      throw new Error('MONGODB_URI is not defined in .env file');
+    }
+    console.log('Connecting to:', process.env.MONGODB_URI.replace(/:.*@/, ':<password>@'));
+
     await mongoose.connect(process.env.MONGODB_URI as string, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
@@ -20,14 +29,13 @@ async function seedDatabase(): Promise<void> {
     await AuditLog.deleteMany({});
     await Notification.deleteMany({});
 
-
     // Create a property
     const property = await Property.create({
       name: 'Hotel Sunshine',
       address: '123 Main St, City, Country',
     });
 
-    // Seed rooms (30 rooms: 6 per floor, Standard/Deluxe)
+    // Seed rooms (30 rooms: 10 per floor, Standard/Deluxe)
     const rooms = [];
     for (let floor = 1; floor <= 3; floor++) {
       for (let i = 1; i <= 6; i++) {
@@ -43,7 +51,7 @@ async function seedDatabase(): Promise<void> {
       }
     }
     const seededRooms = await Room.insertMany(rooms);
-    console.log('Seeded 30 rooms');
+    console.log('Seeded 18 rooms');
 
     // Seed users (1 Manager, 2 Receptionists)
     const users = [
@@ -54,7 +62,7 @@ async function seedDatabase(): Promise<void> {
         propertyId: property._id,
       },
       {
-        username: 'receptionist',
+        username: 'receptionist1',
         password: await bcrypt.hash('password123', 10),
         role: 'Receptionist',
         propertyId: property._id,
@@ -63,12 +71,14 @@ async function seedDatabase(): Promise<void> {
     const seededUsers = await User.insertMany(users);
     console.log('Seeded 2 users');
 
-    // Seed a guest
+    // Seed a guest with loyalty tier
     const guest = await Guest.create({
       name: 'John Doe',
       email: 'john.doe@example.com',
       phone: '123-456-7890',
       gdprConsent: true,
+      loyaltyPoints: 100,
+      loyaltyTier: 'Bronze',
       propertyId: property._id,
     });
     console.log('Seeded 1 guest');
@@ -123,9 +133,11 @@ async function seedDatabase(): Promise<void> {
     console.log('Seeded 1 notification');
 
     console.log('Database seeding completed');
+    await mongoose.connection.close();
     process.exit(0);
   } catch (error) {
     console.error('Seeding error:', error);
+    await mongoose.connection.close();
     process.exit(1);
   }
 }
