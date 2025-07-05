@@ -78,3 +78,24 @@ Notification
  ├─ related to ─▶ Maintenance (optional, via relatedEntity)
  └─ related to ─▶ Housekeeping (optional, via relatedEntity)
      └─ Note: Manages alerts (Email, SMS, Push, InApp). `propertyId` ensures property-specific notifications.
+
+
+PostgreSQL Relational Setup for HMS
+
+Database: hms (Neon free tier, 3 GB)
+ └─ Tables:
+     ├─ properties (1 row: Hotel Sunshine)
+     ├─ room_types (2 rows: Standard, Deluxe)
+     ├─ rooms (30 rows, FK: room_type_id, property_id)
+     ├─ guests (FK: property_id, indexed: email, loyalty_tier)
+     ├─ users (FK: property_id, indexed: username, email)
+     ├─ bookings (FK: guest_id, room_id, property_id)
+     ├─ invoices (FK: booking_id)
+     ├─ maintenances (FK: room_id, property_id)
+     ├─ housekeepings (FK: room_id, property_id)
+     ├─ ota_reservations (FK: booking_id, property_id)
+     ├─ audit_logs (FK: user_id, property_id)
+     └─ notifications (FK: property_id)
+ └─ Roles:
+     ├─ hms_app_user (read/write)
+     └─ hms_readonly_user (read-only)
