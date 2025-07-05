@@ -30,9 +30,7 @@ yarn-error.log*
 .env*
 .env
 
-# typescript
-*.tsbuildinfo
-next-env.d.ts
-.env/local
 
 useful.md
+node_modules
+env
