@@ -45,10 +45,9 @@ async function seedDatabase(): Promise<void> {
     const propertyId = propertyRes.rows[0].id;
     console.log('Seeded 1 property');
 
-    // Seed rooms (30 rooms: 10 per floor, Standard/Deluxe)
-    const rooms = [];
+     const rooms = [];
     for (let floor = 1; floor <= 3; floor++) {
-      for (let i = 1; i <= 10; i++) {
+      for (let i = 1; i <= 6; i++) {
         const roomNumber = `${floor}${i.toString().padStart(2, '0')}`;
         rooms.push([
           roomNumber,
@@ -63,12 +62,12 @@ async function seedDatabase(): Promise<void> {
       `INSERT INTO rooms (room_number, floor, room_type_id, status, property_id) VALUES ${rooms.map((_, i) => `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, $${i * 5 + 5})`).join(', ')}`,
       rooms.flat()
     );
-    console.log('Seeded 30 rooms');
+    console.log('Seeded 18 rooms');
 
-    // Seed users (1 Manager, 2 Receptionists)
+    // Seed users (1 Manager, 1 Receptionist)
     const users = [
       {
-        username: 'manager1',
+        username: 'manager',
         email: 'manager1@hotelsunshine.com',
         password: await bcrypt.hash('password123', 10),
         role: 'Manager',
@@ -80,14 +79,7 @@ async function seedDatabase(): Promise<void> {
         password: await bcrypt.hash('password123', 10),
         role: 'Receptionist',
         propertyId,
-      },
-      {
-        username: 'receptionist2',
-        email: 'receptionist2@hotelsunshine.com',
-        password: await bcrypt.hash('password123', 10),
-        role: 'Receptionist',
-        propertyId,
-      },
+      }
     ];
     const userRes = await client.query(
       `INSERT INTO users (username, email, password, role, property_id) VALUES ${users.map((_, i) => `($${i * 5 + 1}, $${i * 5 + 2}, $${i * 5 + 3}, $${i * 5 + 4}, $${i * 5 + 5})`).join(', ')} RETURNING id`,

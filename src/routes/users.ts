@@ -8,9 +8,9 @@ const router = express.Router();
 
 // Login
 router.post('/login', async (req: Request, res: Response): Promise<void> => {
-  const { email, password } = req.body;
+  const { username, password } = req.body;
   try {
-    const result = await login(email, password);
+    const result = await login(username, password);
     res.status(200).json(result);
   } catch (err) {
     res.status(401).json({ error: (err as Error).message });

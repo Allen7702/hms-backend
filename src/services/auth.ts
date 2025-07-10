@@ -2,8 +2,8 @@ import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 import { query } from './db';
 
-export const login = async (email: string, password: string) => {
-  const result = await query('SELECT id, email, password, role FROM users WHERE email = $1', [email]);
+export const login = async (username: string, password: string) => {
+  const result = await query('SELECT id, username, password, role FROM users WHERE username = $1', [username]);
   if (result.rows.length === 0) {
     throw new Error('User not found');
   }
@@ -17,5 +17,5 @@ export const login = async (email: string, password: string) => {
   const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET || 'your_jwt_secret_here', {
     expiresIn: '1h',
   });
-  return { token, user: { id: user.id, email: user.email, role: user.role } };
+  return { token, user: { id: user.id, username: user.username, role: user.role } };
 };
