@@ -85,4 +85,27 @@ router.post('/', authenticate, restrictTo('Receptionist', 'Manager'), async (req
   }
 });
 
+// Check-in
+router.put('/:id/check-in', authenticate, restrictTo('Receptionist', 'Manager'), async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  await query('UPDATE bookings SET status = $1 WHERE id = $2', ['Active', id]);
+  res.status(200).json({ message: 'Checked in' });
+});
+// Check-out
+router.put('/:id/check-out', authenticate, restrictTo('Receptionist', 'Manager'), async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const booking = await query('SELECT room_id FROM bookings WHERE id = $1', [id]);
+  await query('UPDATE bookings SET status = $1 WHERE id = $2', ['Completed', id]);
+  await query('UPDATE rooms SET status = $1 WHERE id = $2', ['Dirty', booking.rows[0].room_id]);
+  res.status(200).json({ message: 'Checked out' });
+});
+// Cancel
+router.put('/:id/cancel', authenticate, restrictTo('Receptionist', 'Manager'), async (req: Request, res: Response): Promise<void> => {
+  const { id } = req.params;
+  const booking = await query('SELECT room_id FROM bookings WHERE id = $1', [id]);
+  await query('UPDATE bookings SET status = $1 WHERE id = $2', ['Cancelled', id]);
+  await query('UPDATE rooms SET status = $1 WHERE id = $2', ['Available', booking.rows[0].room_id]);
+  res.status(200).json({ message: 'Booking cancelled' });
+});
+
 export default router;

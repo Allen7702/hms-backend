@@ -40,6 +40,7 @@ CREATE TABLE rooms (
   floor INTEGER NOT NULL,
   room_type_id INTEGER REFERENCES room_types(id),
   status VARCHAR(50) NOT NULL CHECK (status IN ('Available', 'Occupied', 'Dirty', 'Maintenance')),
+  features JSONB,
   property_id INTEGER REFERENCES properties(id),
   last_cleaned TIMESTAMP,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -55,6 +56,7 @@ CREATE TABLE guests (
   email VARCHAR(255) NOT NULL UNIQUE,
   phone VARCHAR(20),
   address TEXT,
+  preferences JSONB,
   loyalty_points INTEGER DEFAULT 0,
   loyalty_tier VARCHAR(50) NOT NULL CHECK (loyalty_tier IN ('None', 'Bronze', 'Silver', 'Gold')),
   gdpr_consent BOOLEAN DEFAULT FALSE,
@@ -99,7 +101,10 @@ CREATE INDEX idx_check_in_check_out_status ON bookings (check_in, check_out, sta
 CREATE TABLE invoices (
   id SERIAL PRIMARY KEY,
   booking_id INTEGER REFERENCES bookings(id),
+  guest_id INTEGER REFERENCES guests(id),
   amount DECIMAL(10,2) NOT NULL,
+  tax DECIMAL(10,2),
+  receipt TEXT,
   status VARCHAR(50) NOT NULL CHECK (status IN ('Paid', 'Pending', 'Refunded')),
   payment_method VARCHAR(50) NOT NULL CHECK (payment_method IN ('Credit Card', 'Cash', 'Online')),
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -113,8 +118,10 @@ CREATE TABLE maintenances (
   room_id INTEGER REFERENCES rooms(id),
   description TEXT NOT NULL,
   status VARCHAR(50) NOT NULL CHECK (status IN ('Open', 'In Progress', 'Resolved')),
-  assigned_to VARCHAR(50),
+  priority VARCHAR(20) CHECK (priority IN ('Low', 'Medium', 'High')),
+  assignee_id INTEGER REFERENCES users(id),
   property_id INTEGER REFERENCES properties(id),
+  history JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );

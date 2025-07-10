@@ -50,4 +50,16 @@ router.post('/', authenticate, restrictTo('Manager'), async (req: Request, res: 
   }
 });
 
+router.get('/availability', authenticate, restrictTo('Receptionist', 'Manager'), async (req: Request, res: Response): Promise<void> => {
+  const { start_date, end_date } = req.query;
+  const result = await query(
+    `SELECT r.* FROM rooms r
+     LEFT JOIN bookings b ON r.id = b.room_id AND b.status = 'Active'
+     AND (b.check_in <= $2 AND b.check_out >= $1)
+     WHERE b.id IS NULL AND r.status NOT IN ('Maintenance', 'Dirty')`,
+    [start_date, end_date]
+  );
+  res.status(200).json(result.rows);
+});
+
 export default router;
