@@ -45,7 +45,7 @@ async function seedDatabase(): Promise<void> {
     const propertyId = propertyRes.rows[0].id;
     console.log('Seeded 1 property');
 
-     const rooms = [];
+    const rooms = [];
     for (let floor = 1; floor <= 3; floor++) {
       for (let i = 1; i <= 6; i++) {
         const roomNumber = `${floor}${i.toString().padStart(2, '0')}`;
@@ -96,6 +96,7 @@ async function seedDatabase(): Promise<void> {
     const guestId = guestRes.rows[0].id;
     console.log('Seeded 1 guest');
 
+
     // Seed a booking
     const roomRes = await client.query(`SELECT id FROM rooms WHERE room_number = '101'`);
     const roomId = roomRes.rows[0].id;
@@ -106,11 +107,13 @@ async function seedDatabase(): Promise<void> {
     const bookingId = bookingRes.rows[0].id;
     console.log('Seeded 1 booking');
 
-    // Seed an OTA reservation
-    await client.query(
-      `INSERT INTO ota_reservations (booking_id, ota_id, source, guest_notes, cancellation_policy, property_id) VALUES ($1, $2, $3, $4, $5, $6)`,
-      [bookingId, 'BC123456789', 'Booking.com', 'Late check-in requested', 'Non-refunded', propertyId]
-    );
+    // Insert OTA reservation
+    const otaResult = await client.query(`
+      INSERT INTO ota_reservations (booking_id, ota_id, ota_name, property_id) VALUES
+      ($1, 'OTA123', 'Booking.com', $2)
+      ON CONFLICT DO NOTHING
+      RETURNING id;
+    `, [bookingId, propertyId]);
     console.log('Seeded 1 OTA reservation');
 
     // Seed an audit log
@@ -126,6 +129,21 @@ async function seedDatabase(): Promise<void> {
       ['Email', 'john.doe@example.com', 'Your booking for July 10-12 is confirmed!', 'Pending', bookingId, 'Booking', propertyId]
     );
     console.log('Seeded 1 notification');
+
+    // Insert invoices
+     await client.query(`
+      INSERT INTO invoices (booking_id, amount, tax, receipt, status, payment_method, property_id) VALUES
+      (1, 220.00, 20.00, 'Invoice for booking 1: 2 nights at $100.00/night, Tax: $20.00, Total: $220.00', 'Paid', 'Credit Card', 1)
+      ON CONFLICT DO NOTHING;
+    `);
+
+    // Insert refresh tokens (7-day expiry)
+    await client.query(`
+      INSERT INTO refresh_tokens (user_id, token, expires_at, property_id) VALUES
+      (1, 'sample-refresh-token-manager1', $1, 1),
+      (2, 'sample-refresh-token-receptionist1', $1, 1)
+      ON CONFLICT DO NOTHING;
+    `, [new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)]);
 
     console.log('Database seeding completed');
     await client.release();

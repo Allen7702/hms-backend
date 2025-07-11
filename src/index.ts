@@ -4,6 +4,8 @@ import dotenv from 'dotenv';
 import userRoutes from './routes/users';
 import roomRoutes from './routes/rooms';
 import bookingRoutes from './routes/bookings';
+import maintenanceRoutes from './routes/maintenance';
+import guestRoutes from './routes/guests';
 import { pool } from './services/db';
 
 dotenv.config();
@@ -36,6 +38,8 @@ pool.connect((err, client, release) => {
 app.use('/api/users', userRoutes);
 app.use('/api/rooms', roomRoutes);
 app.use('/api/bookings', bookingRoutes);
+app.use('/api/guests', guestRoutes);
+app.use('/api/maintenance', maintenanceRoutes);
 
 app.get('/api/health', (req: Request, res: Response) => {
   res.status(200).json({ status: 'OK', message: 'HMS Backend is running' });

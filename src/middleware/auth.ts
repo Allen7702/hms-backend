@@ -1,12 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
 import jwt from 'jsonwebtoken';
-import { pool } from '../services/db'; // Updated to import pool from db service
+import { pool } from '../services/db';  
 import dotenv from 'dotenv';
 
 dotenv.config();
 
 interface AuthRequest extends Request {
-  user?: { id: number; role: string };
+  user?: { id: number; role: string; property_id: number };
 }
 
 export const authenticate = async (req: AuthRequest, res: Response, next: NextFunction): Promise<void> => {
@@ -19,7 +19,7 @@ export const authenticate = async (req: AuthRequest, res: Response, next: NextFu
   try {
     const secret = process.env.JWT_SECRET || 'your_jwt_secret_here';
     const decoded = jwt.verify(token, secret) as { id: number; role: string };
-    const result = await pool.query('SELECT id, role FROM users WHERE id = $1', [decoded.id]);
+    const result = await pool.query('SELECT id, role, property_id FROM users WHERE id = $1', [decoded.id]);
     if (result.rows.length === 0) {
       res.status(401).json({ error: 'Invalid token' });
       return;
